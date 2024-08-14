@@ -1,50 +1,45 @@
-const STORAGE_KEY = 'feedback-form-state';
+const feedbackFormEl = document.querySelector(`.feedback-form`);
+let formData = {
+  email: '',
+  message: '',
+};
 
-const form = document.querySelector('form.feedback-form');
+const fillFormFields = () => {
+  const formDataFromLS = JSON.parse(localStorage.getItem(`feedback-form-data`));
 
-form.addEventListener('input', handleFormInput);
-form.addEventListener('submit', handleFormSubmit);
+  if (formDataFromLS === null) {
+    return;
+  }
+  formData = formDataFromLS;
 
-function handleFormInput() {
-  const email = form.elements.email.value.trim();
-  const message = form.elements.message.value.trim();
-  const objForm = {
-    email,
-    message,
-  };
-  saveToLS(STORAGE_KEY, objForm);
-}
+  for (const key in formDataFromLS) {
+    if (formDataFromLS.hasOwnProperty(key)) {
+      feedbackFormEl.elements[key].value = formDataFromLS[key];
+    }
+  }
+};
+fillFormFields();
 
-function handleFormSubmit(event) {
+const onFormFieldInput = event => {
+  const fieldName = event.target.name;
+  const fieldValue = event.target.value.trim();
+
+  formData[fieldName] = fieldValue;
+  localStorage.setItem(`feedback-form-data`, JSON.stringify(formData));
+};
+
+const onFeedbackFormSubmit = event => {
   event.preventDefault();
 
-  if (form.elements.email.value === '' || form.elements.message.value === '') {
-    return alert('All form fields must be filled in');
+  if (formData.email.trim() === `` || formData.message.trim() === ``) {
+    alert(`Fill please all fields!`);
+    return;
   }
-  const data = loadFromLS(STORAGE_KEY);
-  console.log(data);
-  localStorage.removeItem(STORAGE_KEY);
-  form.reset();
-}
 
-function saveToLS(key, value) {
-  const serializedData = JSON.stringify(value);
-  localStorage.setItem(key, serializedData);
-}
+  event.target.reset();
+  localStorage.removeItem(`feedback-form-data`);
+  formData = { email: '', message: '' };
+};
 
-function loadFromLS(key) {
-  const serializedData = localStorage.getItem(key);
-  try {
-    return JSON.parse(serializedData);
-  } catch {
-    return serializedData;
-  }
-}
-
-function init() {
-  const data = loadFromLS(STORAGE_KEY) || {};
-  form.elements.email.value = data.email || '';
-  form.elements.message.value = data.message || '';
-}
-
-init();
+feedbackFormEl.addEventListener(`input`, onFormFieldInput);
+feedbackFormEl.addEventListener(`submit`, onFeedbackFormSubmit);
